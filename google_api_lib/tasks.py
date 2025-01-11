@@ -683,7 +683,7 @@ def get_file_user_emails(self, file_id) -> List[str]:
     emails = set()
     for perm in permissions:
         if perm["id"] == "anyoneWithLink":
-            return None
+            continue
         email = perm["emailAddress"]
         emails.add(email)
         emails.add(email.lower())
@@ -701,7 +701,15 @@ def sync_drive_permissions_for_hunt(self, hunt_id):
     if not hunt.settings.google_drive_folder_id:
         return
 
+    users_with_access = hunt.get_users_with_perm("hunt_access")
+
     UserModel = get_user_model()
     emails = get_file_user_emails.run(hunt.settings.google_drive_folder_id)
-    users = UserModel.objects.filter(email__in=emails)
+    if not emails:
+        logger.warn("Unable to get Google Drive emails for hunt", hunt)
+        return
+
+    users = UserModel.objects.filter(email__in=emails).exclude(
+        id__in=[user.pk for user in users_with_access]
+    )
     assign_perm("hunt_access", users, hunt)
