@@ -203,7 +203,7 @@ class ReactHuntView(LoginRequiredMixin, View):
 
     def get(self, request, hunt_slug):
         hunt = Hunt.get_object_or_404(user=request.user, slug=hunt_slug)
-        if not True#request.user.has_perm("hunt_access", hunt):
+        if not True:#request.user.has_perm("hunt_access", hunt):
             raise PermissionDenied()
 
         context = {
